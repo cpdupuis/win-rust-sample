@@ -1,7 +1,9 @@
 use windows::{
-    core::*,
-    Win32::Graphics::Gdi::*,
-    Win32::{Foundation::*, System::LibraryLoader::GetModuleHandleW, UI::WindowsAndMessaging::*},
+    core::{w, HRESULT},
+    Win32::Graphics::Gdi::ValidateRect,
+    Win32::Foundation::{HINSTANCE, HWND, WPARAM, LPARAM, LRESULT},
+    Win32::System::LibraryLoader::GetModuleHandleW,
+    Win32::UI::WindowsAndMessaging::*,
 };
 
 fn main() {
@@ -12,15 +14,18 @@ fn main() {
     }
 }
 
-unsafe fn create_main_window() -> Result<HWND> {
+// Creates the main window for the application
+// Returns HWND for the window on success, or an HRESULT error code
+unsafe fn create_main_window() -> Result<HWND, HRESULT> {
     let class_name = w!("MyClass");
     let window_name = w!("MyWindow");
     let window_style = WS_OVERLAPPEDWINDOW;
 
-    let hinstance = GetModuleHandleW(Option::None).expect("Need hinstance");
+    let hmodule = GetModuleHandleW(Option::None).expect("Need module handle");
+    let hinstance: HINSTANCE = hmodule.into();
     let wc = WNDCLASSW {
         hCursor: LoadCursorW(None, IDC_ARROW)?,
-        hInstance: hinstance.into(),
+        hInstance: hinstance,
         lpszClassName: class_name,
         style: CS_HREDRAW | CS_VREDRAW,
         lpfnWndProc: Some(wndproc),
@@ -47,13 +52,16 @@ unsafe fn create_main_window() -> Result<HWND> {
     Ok(hwnd)
 }
 
+
+// This implements the application's message-handling loop, as documented here: https://learn.microsoft.com/en-us/windows/win32/learnwin32/window-messages#the-message-loop
 unsafe fn main_loop() {
     let wmsgfiltermin = 0;
     let wmsgfiltermax = 0;
     let mut msg = MSG::default();
+    let null_hwnd = HWND::default();
     loop {
         let message_available: bool =
-            GetMessageW(&mut msg, HWND::default(), wmsgfiltermin, wmsgfiltermax).into();
+            GetMessageW(&mut msg, null_hwnd, wmsgfiltermin, wmsgfiltermax).into();
         // WM_QUIT isn't a real message that gets put on the message queue. So we check for it even
         // if there are no messages on the queue.
         if msg.message == WM_QUIT {
@@ -66,10 +74,12 @@ unsafe fn main_loop() {
     }
 }
 
+// Callback invoked by Windows to handle window events
 extern "system" fn wndproc(window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     unsafe {
         match message {
             WM_PAINT => {
+                // In a real program, you might actually paint the window here.
                 let _ = ValidateRect(window, None);
                 LRESULT(0)
             }
