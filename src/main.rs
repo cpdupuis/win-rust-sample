@@ -4,7 +4,6 @@ use windows::{
     Win32::{Foundation::*, System::LibraryLoader::GetModuleHandleW, UI::WindowsAndMessaging::*},
 };
 
-
 fn main() {
     unsafe {
         let hwnd = create_main_window().expect("Expected a window");
@@ -12,7 +11,6 @@ fn main() {
         main_loop();
     }
 }
-
 
 unsafe fn create_main_window() -> Result<HWND> {
     let class_name = w!("MyClass");
@@ -54,24 +52,19 @@ unsafe fn main_loop() {
     let wmsgfiltermax = 0;
     let mut msg = MSG::default();
     loop {
-        let message_available: bool = PeekMessageW(
-            &mut msg,
-            Option::None,
-            wmsgfiltermin,
-            wmsgfiltermax,
-            PM_REMOVE,
-        )
-        .into();
+        let message_available: bool =
+            GetMessageW(&mut msg, HWND::default(), wmsgfiltermin, wmsgfiltermax).into();
+        // WM_QUIT isn't a real message that gets put on the message queue. So we check for it even
+        // if there are no messages on the queue.
+        if msg.message == WM_QUIT {
+            break;
+        }
         if message_available {
-            if msg.message == WM_QUIT {
-                break;
-            }
             let _ = TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }
     }
 }
-
 
 extern "system" fn wndproc(window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     unsafe {
