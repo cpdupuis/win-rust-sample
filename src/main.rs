@@ -1,9 +1,11 @@
 use windows::{
     core::{w, HRESULT},
-    Win32::Graphics::Gdi::ValidateRect,
-    Win32::Foundation::{HINSTANCE, HWND, WPARAM, LPARAM, LRESULT},
-    Win32::System::LibraryLoader::GetModuleHandleW,
-    Win32::UI::WindowsAndMessaging::*,
+    Win32::{
+        Foundation::{COLORREF, HINSTANCE, HWND, LPARAM, LRESULT, WPARAM},
+        Graphics::Gdi::*,
+        System::LibraryLoader::GetModuleHandleW,
+        UI::WindowsAndMessaging::*,
+    },
 };
 
 fn main() {
@@ -52,7 +54,6 @@ unsafe fn create_main_window() -> Result<HWND, HRESULT> {
     Ok(hwnd)
 }
 
-
 // This implements the application's message-handling loop, as documented here: https://learn.microsoft.com/en-us/windows/win32/learnwin32/window-messages#the-message-loop
 unsafe fn main_loop() {
     let wmsgfiltermin = 0;
@@ -79,8 +80,13 @@ extern "system" fn wndproc(window: HWND, message: u32, wparam: WPARAM, lparam: L
     unsafe {
         match message {
             WM_PAINT => {
-                // In a real program, you might actually paint the window here.
-                let _ = ValidateRect(window, None);
+                let mut ps = PAINTSTRUCT::default();
+                let hdc = BeginPaint(window, &mut ps);
+                // Clear the screen to blue. Just because.
+                let colorref = COLORREF(0x00FF0000);
+                let hbrush = CreateSolidBrush(colorref);
+                FillRect(hdc, &ps.rcPaint, hbrush);
+                let _ = EndPaint(window, &mut ps);
                 LRESULT(0)
             }
             WM_DESTROY => {
