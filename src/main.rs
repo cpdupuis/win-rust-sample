@@ -1,5 +1,5 @@
 use windows::{
-    core::{w, HRESULT},
+    core::{w, PCWSTR},
     Win32::{
         Foundation::{COLORREF, HINSTANCE, HWND, LPARAM, LRESULT, WPARAM},
         Graphics::Gdi::*,
@@ -9,37 +9,45 @@ use windows::{
 };
 
 fn main() {
+    let class_name = w!("MyClass");
+
     unsafe {
-        let hwnd = create_main_window().expect("Expected a window");
+        let hinstance = register_class(&class_name).expect("Needs to register a class");
+        let hwnd = create_main_window(&hinstance, &class_name).expect("Need to create a window");
         let _ = ShowWindow(hwnd, SW_SHOWNORMAL);
         main_loop();
     }
 }
 
-// Creates the main window for the application
-// Returns HWND for the window on success, or an HRESULT error code
-unsafe fn create_main_window() -> Result<HWND, HRESULT> {
-    let class_name = w!("MyClass");
-    let window_name = w!("MyWindow");
-    let window_style = WS_OVERLAPPEDWINDOW;
-
-    let hmodule = GetModuleHandleW(Option::None).expect("Need module handle");
+unsafe fn register_class(class_name: &PCWSTR) -> windows::core::Result<HINSTANCE> {
+    let cursor = LoadCursorW(None, IDC_ARROW)?;
+    let hmodule = GetModuleHandleW(Option::None)?;
     let hinstance: HINSTANCE = hmodule.into();
     let wc = WNDCLASSW {
-        hCursor: LoadCursorW(None, IDC_ARROW)?,
+        hCursor: cursor,
         hInstance: hinstance,
-        lpszClassName: class_name,
+        lpszClassName: *class_name,
         style: CS_HREDRAW | CS_VREDRAW,
         lpfnWndProc: Some(wndproc),
 
         ..Default::default()
     };
     let atom = RegisterClassW(&wc);
-    debug_assert!(atom != 0);
+    if atom == 0 {
+        panic!("Failed to register class");
+    }
+    return Ok(hinstance);
+}
+
+// Creates the main window for the application
+// Returns HWND for the window on success, or an HRESULT error code
+unsafe fn create_main_window(hinstance: &HINSTANCE, class_name: &PCWSTR) -> windows::core::Result<HWND> {
+    let window_name = w!("MyWindow");
+    let window_style = WS_OVERLAPPEDWINDOW;
 
     let hwnd = CreateWindowExW(
         WINDOW_EX_STYLE::default(),
-        class_name,
+        *class_name,
         window_name,
         window_style,
         CW_USEDEFAULT,
@@ -48,10 +56,10 @@ unsafe fn create_main_window() -> Result<HWND, HRESULT> {
         CW_USEDEFAULT,
         Option::None,
         Option::None,
-        hinstance,
+        *hinstance,
         Option::None,
     )?;
-    Ok(hwnd)
+    return Ok(hwnd);
 }
 
 // This implements the application's message-handling loop, as documented here: https://learn.microsoft.com/en-us/windows/win32/learnwin32/window-messages#the-message-loop
