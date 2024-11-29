@@ -1,5 +1,5 @@
 use windows::{
-    core::{w, PCWSTR},
+    core::{w, PCWSTR, HRESULT},
     Win32::{
         Foundation::{COLORREF, HINSTANCE, HWND, LPARAM, LRESULT, WPARAM},
         Graphics::Gdi::*,
@@ -34,7 +34,7 @@ unsafe fn register_class(class_name: &PCWSTR) -> windows::core::Result<HINSTANCE
     };
     let atom = RegisterClassW(&wc);
     if atom == 0 {
-        panic!("Failed to register class");
+        return Err(windows_result::Error::from_hresult(HRESULT(0x80004005u32 /* E_FAIL */ as i32)));
     }
     return Ok(hinstance);
 }
