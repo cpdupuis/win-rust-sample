@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use windows::{
     core::{w, PCWSTR, HRESULT},
     Win32::{

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+  <Identity Name="win-rust-sample" Version="1.0.0.0" Publisher="CN=Chris DuPuis, L=you are here" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>win-rust-sample</DisplayName>
+    <PublisherDisplayName>Chris DuPuis</PublisherDisplayName>
+    <Description>A simple Win32 sample application in 100% Rust</Description>
+    <Logo>images\150.png</Logo>
+  </Properties>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22631.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust"/>
+  </Capabilities>
+  <Applications>
+    <Application Id="win.rust.sample" Executable="target\release\win-rust-sample.exe"
+      uap10:RuntimeBehavior="win32App"
+      uap10:TrustLevel="mediumIL">
+      <uap:VisualElements DisplayName="win-rust-sample" Description="win-rust-sample"	Square150x150Logo="images\150.png"
+        Square44x44Logo="images\44.png" BackgroundColor="#0000FF" />
+    </Application>
+  </Applications>
+</Package>
